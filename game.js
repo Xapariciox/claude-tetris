@@ -4,6 +4,7 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
+// Tunable: edit these 7 colors to reskin the retro theme (Index 1–7 maps to piece types I–L)
 const COLORS = [
   null,
   '#4dd0e1', // I - cyan
@@ -16,7 +17,7 @@ const COLORS = [
 ];
 
 const THEME_COLORS = {
-  retro:    [null, '#4dd0e1','#ffd54f','#ba68c8','#81c784','#e57373','#7986cb','#ffb74d'],
+  retro:    COLORS,
   neon:     [null, '#00fff5','#ffe600','#ff00ff','#00ff88','#ff3333','#4488ff','#ff8800'],
   pastel:   [null, '#b2ebf2','#fff9c4','#e1bee7','#c8e6c9','#ffcdd2','#c5cae9','#ffe0b2'],
   pixelart: [null, '#29b6d4','#f6b900','#9c27b0','#43a047','#e53935','#3949ab','#ef6c00'],
@@ -176,6 +177,7 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
     context.shadowColor = color;
     context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
     context.shadowBlur = 0;
+    context.shadowColor = 'transparent';
   } else if (currentTheme === 'pastel') {
     const r = 5, bx = x * size + 2, by = y * size + 2, bw = size - 4, bh = size - 4;
     context.beginPath();
@@ -192,14 +194,14 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   } else if (currentTheme === 'pixelart') {
     // outer block
     context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-    // dark shadow corner (bottom-right inset)
+    // dark shadow (bottom-right inset) — horizontal strip trimmed right to avoid corner overlap
     context.fillStyle = 'rgba(0,0,0,0.35)';
-    context.fillRect(x * size + size - 6, y * size + 1, 5, size - 2);
-    context.fillRect(x * size + 1, y * size + size - 6, size - 2, 5);
-    // light highlight (top-left inset)
+    context.fillRect(x * size + size - 6, y * size + 1, 5, size - 2);        // right vertical
+    context.fillRect(x * size + 1, y * size + size - 6, size - 2 - 5, 5);   // bottom horizontal (stop before right strip)
+    // light highlight (top-left inset) — horizontal strip trimmed left to avoid corner overlap
     context.fillStyle = 'rgba(255,255,255,0.35)';
-    context.fillRect(x * size + 1, y * size + 1, 5, size - 2);
-    context.fillRect(x * size + 1, y * size + 1, size - 2, 5);
+    context.fillRect(x * size + 1, y * size + 1, 5, size - 2);               // left vertical
+    context.fillRect(x * size + 1 + 5, y * size + 1, size - 2 - 5, 5);      // top horizontal (start after left strip)
   } else {
     // retro (default)
     context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
@@ -302,9 +304,10 @@ function loop(ts) {
 function applyTheme(name) {
   currentTheme = name;
   try { localStorage.setItem('tetris_theme', name); } catch (e) {}
-  document.body.className = 'theme-' + name;
-  if (!gameOver && !paused) draw();
-  if (!gameOver) drawNext();
+  Object.keys(THEME_COLORS).forEach(t => document.body.classList.remove('theme-' + t));
+  document.body.classList.add('theme-' + name);
+  draw();
+  drawNext();
 }
 
 function init() {
@@ -361,7 +364,8 @@ themeSelect.addEventListener('change', function () { applyTheme(this.value); });
   try { saved = localStorage.getItem('tetris_theme') || 'retro'; } catch (e) {}
   if (!THEME_COLORS[saved]) saved = 'retro';
   currentTheme = saved;
-  document.body.className = 'theme-' + saved;
+  Object.keys(THEME_COLORS).forEach(t => document.body.classList.remove('theme-' + t));
+  document.body.classList.add('theme-' + saved);
   themeSelect.value = saved;
 })();
 

@@ -161,3 +161,48 @@ kbd {
 #restart-btn:hover {
   background: #9bbdff;
 }
+
+/* ---- Theme skin select ---- */
+#theme-select {
+  background: #22223a;
+  color: #e0e0e0;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ---- Visual Themes ---- */
+body.theme-neon {
+  background: #000010;
+}
+body.theme-neon #board, body.theme-neon #next-canvas {
+  background: #000010;
+  border-color: #00fff5;
+  box-shadow: 0 0 20px rgba(0,255,245,0.3);
+}
+
+body.theme-pastel {
+  background: #f8f0ff;
+  color: #333;
+}
+body.theme-pastel #board, body.theme-pastel #next-canvas {
+  background: #f0e8ff;
+  border-color: #c5a3e8;
+}
+body.theme-pastel .value {
+  color: #7b52ab;
+}
+body.theme-pastel .label {
+  color: #9977bb;
+}
+body.theme-pastel .game-title {
+  color: #7b52ab;
+}
+
+body.theme-pixelart {
+  background: #1a1a2e;
+  image-rendering: pixelated;
+}

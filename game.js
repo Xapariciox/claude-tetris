@@ -15,6 +15,13 @@ const COLORS = [
   '#ffb74d', // L - orange
 ];
 
+const THEME_COLORS = {
+  retro:    [null, '#4dd0e1','#ffd54f','#ba68c8','#81c784','#e57373','#7986cb','#ffb74d'],
+  neon:     [null, '#00fff5','#ffe600','#ff00ff','#00ff88','#ff3333','#4488ff','#ff8800'],
+  pastel:   [null, '#b2ebf2','#fff9c4','#e1bee7','#c8e6c9','#ffcdd2','#c5cae9','#ffe0b2'],
+  pixelart: [null, '#29b6d4','#f6b900','#9c27b0','#43a047','#e53935','#3949ab','#ef6c00'],
+};
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -41,6 +48,7 @@ const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let currentTheme = 'retro';
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -158,13 +166,48 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const palette = THEME_COLORS[currentTheme] || THEME_COLORS.retro;
+  const color = palette[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+
+  if (currentTheme === 'neon') {
+    context.shadowBlur = 14;
+    context.shadowColor = color;
+    context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+    context.shadowBlur = 0;
+  } else if (currentTheme === 'pastel') {
+    const r = 5, bx = x * size + 2, by = y * size + 2, bw = size - 4, bh = size - 4;
+    context.beginPath();
+    context.moveTo(bx + r, by);
+    context.arcTo(bx + bw, by, bx + bw, by + bh, r);
+    context.arcTo(bx + bw, by + bh, bx, by + bh, r);
+    context.arcTo(bx, by + bh, bx, by, r);
+    context.arcTo(bx, by, bx + bw, by, r);
+    context.closePath();
+    context.fill();
+    // soft white highlight
+    context.fillStyle = 'rgba(255,255,255,0.20)';
+    context.fillRect(x * size + 3, y * size + 3, size - 6, 4);
+  } else if (currentTheme === 'pixelart') {
+    // outer block
+    context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+    // dark shadow corner (bottom-right inset)
+    context.fillStyle = 'rgba(0,0,0,0.35)';
+    context.fillRect(x * size + size - 6, y * size + 1, 5, size - 2);
+    context.fillRect(x * size + 1, y * size + size - 6, size - 2, 5);
+    // light highlight (top-left inset)
+    context.fillStyle = 'rgba(255,255,255,0.35)';
+    context.fillRect(x * size + 1, y * size + 1, 5, size - 2);
+    context.fillRect(x * size + 1, y * size + 1, size - 2, 5);
+  } else {
+    // retro (default)
+    context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+    // highlight
+    context.fillStyle = 'rgba(255,255,255,0.12)';
+    context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  }
+
   context.globalAlpha = 1;
 }
 
@@ -256,6 +299,14 @@ function loop(ts) {
   animId = requestAnimationFrame(loop);
 }
 
+function applyTheme(name) {
+  currentTheme = name;
+  try { localStorage.setItem('tetris_theme', name); } catch (e) {}
+  document.body.className = 'theme-' + name;
+  if (!gameOver && !paused) draw();
+  if (!gameOver) drawNext();
+}
+
 function init() {
   board = createBoard();
   score = 0;
@@ -300,5 +351,18 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+const themeSelect = document.getElementById('theme-select');
+themeSelect.addEventListener('change', function () { applyTheme(this.value); });
+
+// Load saved theme on page load
+(function () {
+  let saved = 'retro';
+  try { saved = localStorage.getItem('tetris_theme') || 'retro'; } catch (e) {}
+  if (!THEME_COLORS[saved]) saved = 'retro';
+  currentTheme = saved;
+  document.body.className = 'theme-' + saved;
+  themeSelect.value = saved;
+})();
 
 init();

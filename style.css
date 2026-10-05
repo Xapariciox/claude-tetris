@@ -138,13 +138,22 @@ kbd {
   color: #e57373;
 }
 
+.pause-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #7aa2f7;
+}
+
 #overlay-score {
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
   color: #7aa2f7;
 }
 
-#restart-btn {
+#restart-btn,
+#resume-btn,
+#pause-restart-btn {
   margin-top: 8px;
   background: #7aa2f7;
   color: #0f0f17;
@@ -156,8 +165,73 @@ kbd {
   cursor: pointer;
   letter-spacing: 1px;
   transition: background 0.15s;
+  width: 100%;
 }
 
-#restart-btn:hover {
+#restart-btn:hover,
+#resume-btn:hover,
+#pause-restart-btn:hover {
   background: #9bbdff;
+}
+
+/* ---- Pause overlay extras ---- */
+.controls-details {
+  font-size: 12px;
+  color: #888;
+  text-align: left;
+  width: 100%;
+}
+
+.controls-details summary {
+  cursor: pointer;
+  color: #aaa;
+  padding: 4px 0;
+  user-select: none;
+  letter-spacing: 0.5px;
+}
+
+.controls-details summary:hover {
+  color: #ccc;
+}
+
+.controls-details ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 8px;
+  padding-left: 4px;
+}
+
+.controls-details li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.level-select-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #888;
+  letter-spacing: 1px;
+  width: 100%;
+}
+
+#start-level-select {
+  background: #22223a;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  color: #e0e0e0;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+}
+
+#start-level-select:focus {
+  outline: none;
+  border-color: #7aa2f7;
 }

@@ -3,6 +3,7 @@
 const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
+const MAX_SCORES = 5;
 
 const COLORS = [
   null,
@@ -39,8 +40,16 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const nameEntry = document.getElementById('name-entry');
+const playerName = document.getElementById('player-name');
+const saveScoreBtn = document.getElementById('save-score-btn');
+const scoresTableContainer = document.getElementById('scores-table-container');
+const resetScoresBtn = document.getElementById('reset-scores-btn');
+const startScores = document.getElementById('start-scores');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, maxCombo, comboStreak;
+// Snapshot of game-over state so deferred save button reads correct values
+let _savedScore = 0, _savedLines = 0, _savedCombo = 0;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -104,11 +113,15 @@ function clearLines() {
     }
   }
   if (cleared) {
+    comboStreak++;
+    maxCombo = Math.max(maxCombo, comboStreak);
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
+  } else {
+    comboStreak = 0;
   }
 }
 
@@ -218,11 +231,87 @@ function drawNext() {
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
 }
 
+// ---- High Scores ----
+
+function loadScores() {
+  try {
+    return JSON.parse(localStorage.getItem('tetris_scores')) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveScore(name) {
+  const trimmed = String(name || '').trim() || 'AAA';
+  const scores = loadScores();
+  scores.push({ name: trimmed, score: _savedScore, lines: _savedLines, combo: _savedCombo });
+  scores.sort((a, b) => b.score - a.score);
+  try {
+    localStorage.setItem('tetris_scores', JSON.stringify(scores.slice(0, MAX_SCORES)));
+  } catch (e) {}
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderScoresTable(container, highlightScore) {
+  const scores = loadScores();
+  if (!scores.length) {
+    container.innerHTML = '<p class="no-scores">Sin records aún</p>';
+    return;
+  }
+  let rows = '';
+  scores.forEach((s, i) => {
+    const cls = (highlightScore !== undefined && s.score === highlightScore) ? 'highlight-row' : '';
+    rows += `<tr class="${cls}">
+      <td>${i + 1}</td>
+      <td>${escapeHtml(s.name)}</td>
+      <td>${escapeHtml(String(Number(s.score).toLocaleString()))}</td>
+      <td>${escapeHtml(String(s.lines))}</td>
+      <td>${escapeHtml(String(s.combo))}</td>
+    </tr>`;
+  });
+  container.innerHTML = `
+    <table class="scores-table">
+      <thead><tr><th>Pos</th><th>Nombre</th><th>Puntos</th><th>Líneas</th><th>Combo</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ---- Game flow ----
+
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
+
+  // Snapshot final state immediately to guard against rapid Reiniciar click
+  _savedScore = score;
+  _savedLines = lines;
+  _savedCombo = maxCombo;
+
   overlayTitle.textContent = 'GAME OVER';
-  overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  overlayScore.textContent = `Puntuación: ${_savedScore.toLocaleString()}`;
+
+  // Render leaderboard without the new score yet
+  renderScoresTable(scoresTableContainer, undefined);
+
+  // Show name entry only if score qualifies for top MAX_SCORES
+  const existing = loadScores();
+  const qualifies = _savedScore > 0 && (existing.length < MAX_SCORES || _savedScore >= existing[existing.length - 1].score);
+  if (qualifies) {
+    nameEntry.classList.remove('hidden');
+    playerName.value = '';
+    playerName.focus();
+  } else {
+    nameEntry.classList.add('hidden');
+  }
+
+  resetScoresBtn.classList.remove('hidden');
   overlay.classList.remove('hidden');
 }
 
@@ -230,12 +319,16 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    overlay.classList.add('hidden');
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
     overlayTitle.textContent = 'PAUSA';
     overlayScore.textContent = '';
+    nameEntry.classList.add('hidden');
+    scoresTableContainer.innerHTML = '';
+    resetScoresBtn.classList.add('hidden');
     overlay.classList.remove('hidden');
   }
 }
@@ -265,6 +358,16 @@ function init() {
   gameOver = false;
   dropInterval = 1000;
   dropAccum = 0;
+  maxCombo = 0;
+  comboStreak = 0;
+  _savedScore = 0;
+  _savedLines = 0;
+  _savedCombo = 0;
+
+  nameEntry.classList.add('hidden');
+  scoresTableContainer.innerHTML = '';
+  resetScoresBtn.classList.add('hidden');
+
   lastTime = performance.now();
   next = randomPiece();
   spawn();
@@ -272,7 +375,37 @@ function init() {
   overlay.classList.add('hidden');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
+
+  // Render existing scores in panel sidebar
+  if (startScores) {
+    const savedScores = loadScores();
+    if (savedScores.length) {
+      renderScoresTable(startScores, undefined);
+    } else {
+      startScores.innerHTML = '';
+    }
+  }
 }
+
+// ---- Event listeners ----
+
+saveScoreBtn.addEventListener('click', () => {
+  saveScore(playerName.value);
+  renderScoresTable(scoresTableContainer, _savedScore);
+  nameEntry.classList.add('hidden');
+  // Refresh sidebar scores
+  if (startScores) renderScoresTable(startScores, undefined);
+});
+
+playerName.addEventListener('keydown', e => {
+  if (e.code === 'Enter') saveScoreBtn.click();
+});
+
+resetScoresBtn.addEventListener('click', () => {
+  try { localStorage.removeItem('tetris_scores'); } catch (e) {}
+  renderScoresTable(scoresTableContainer, undefined);
+  if (startScores) renderScoresTable(startScores, undefined);
+});
 
 document.addEventListener('keydown', e => {
   if (e.code === 'KeyP') { togglePause(); return; }

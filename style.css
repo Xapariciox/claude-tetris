@@ -117,9 +117,10 @@ kbd {
   background: rgba(10, 10, 20, 0.75);
   backdrop-filter: blur(4px);
   border-radius: 4px;
+  overflow-y: auto;
 }
 
-.overlay.hidden {
+.hidden {
   display: none;
 }
 
@@ -129,6 +130,10 @@ kbd {
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  padding: 20px 16px;
+  max-height: 95vh;
+  overflow-y: auto;
+  width: 100%;
 }
 
 #overlay-title {
@@ -145,7 +150,7 @@ kbd {
 }
 
 #restart-btn {
-  margin-top: 8px;
+  margin-top: 4px;
   background: #7aa2f7;
   color: #0f0f17;
   border: none;
@@ -160,4 +165,151 @@ kbd {
 
 #restart-btn:hover {
   background: #9bbdff;
+}
+
+/* ---- Name entry ---- */
+#name-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+}
+
+#name-entry.hidden {
+  display: none;
+}
+
+#name-entry label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #888;
+  text-transform: uppercase;
+}
+
+#player-name {
+  background: #1a1a25;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  padding: 7px 12px;
+  text-align: center;
+  outline: none;
+  width: 150px;
+}
+
+#player-name:focus {
+  border-color: #7aa2f7;
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.15);
+}
+
+#save-score-btn {
+  background: #7aa2f7;
+  color: #0f0f17;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 22px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+
+#save-score-btn:hover {
+  background: #9bbdff;
+}
+
+/* ---- Scores table ---- */
+#scores-table-container {
+  width: 100%;
+}
+
+.scores-table {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  border-collapse: collapse;
+  width: 100%;
+  color: #ccc;
+}
+
+.scores-table thead {
+  border-bottom: 1px solid #2a2a3a;
+}
+
+.scores-table th {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #555570;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 6px 5px;
+  text-align: left;
+}
+
+.scores-table td {
+  padding: 4px 6px;
+}
+
+.scores-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.scores-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.highlight-row td {
+  color: #c8d8ff;
+}
+
+.highlight-row td:first-child {
+  border-left: 2px solid #7aa2f7;
+  padding-left: 4px;
+}
+
+.no-scores {
+  font-size: 11px;
+  color: #555570;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* ---- Reset button ---- */
+#reset-scores-btn {
+  background: transparent;
+  color: #555570;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, color 0.15s;
+}
+
+#reset-scores-btn:hover {
+  background: #2a2a3a;
+  color: #aaa;
+}
+
+/* ---- Start scores in panel sidebar ---- */
+#start-scores .scores-table {
+  font-size: 9px;
+}
+
+#start-scores .scores-table th {
+  font-size: 8px;
+  padding: 2px 3px 3px;
+}
+
+#start-scores .scores-table td {
+  padding: 2px 3px;
+}
+
+#start-scores .no-scores {
+  font-size: 10px;
 }
